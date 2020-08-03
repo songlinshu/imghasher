@@ -34,21 +34,23 @@ imghasher [ARGS]...
 ## 用法
 
 ```out
-imghasher 0.1.0
+imghasher 0.1.1
 ZhangZhilin <corex_public@outlook.com>
-A tool developed in Rust to process image hash
+A tool for image hash generation developed using Rust
 
 USAGE:
-    imghasher.exe [FLAGS] [OPTIONS] <FILE>...
+    imghasher [FLAGS] [OPTIONS] <FILE>...
 
 FLAGS:
-    -b, --base64       Output in base64
-    -h, --help         Prints help information
-    -q, --quiet        No output, suitable for rename mode
-    -R, --recursive    Process directories recursively
-        --rename       Rename the image file name to the corresponding hash
-    -U, --upper        Output in uppercase, ignored in base64 mode
-    -V, --version      Prints version information
+    -b, --base64         Output in base64
+    -f, --force          Do not prompt before overwriting
+    -h, --help           Prints help information
+    -i, --interactive    Prompt before overwrite
+    -q, --quiet          No output, suitable for rename mode
+    -R, --recursive      Process directories recursively
+        --rename         Rename the image file name to the corresponding hash
+    -U, --upper          Output in uppercase, ignored in base64 mode
+    -V, --version        Prints version information
 
 OPTIONS:
         --algo <algorithm>    Choose a hash algorithm [default: dhash]  [values: ahash, dct_ahash, dhash, dct_dhash]
@@ -66,6 +68,15 @@ ARGS:
 
 > 然而dct_ahash算法的实现输出的结果有些怪异，
 > 建议使用dct_dhash代替
+
+<br>
+
+## TODO
+
+* 支持从标准输入读取图像
+
+* `cargo install` 支持
+
 
 <br>
 

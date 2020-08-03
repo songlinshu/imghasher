@@ -125,10 +125,10 @@ jobs:
     needs: [build_for_linux, build_for_windows, build_for_macos]
     runs-on: ubuntu-latest
     steps:
-      - name: Extract Branch Basename
-        id: extract_branch
+      - name: Get The Version
+        id: get_version
         shell: bash
-        run: echo "##[set-output name=basename;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v2
@@ -152,7 +152,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         #        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: Release ${{ env.PROJECT_NAME }} ${{ github.event.release.tag_name }}
+          name: Release ${{ env.PROJECT_NAME }} ${{ steps.get_version.outputs.VERSION }}
           body: |
             * 更新日志详见README.md
             * 如果您有任何疑惑，也请看README.md

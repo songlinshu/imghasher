@@ -4,9 +4,11 @@ extern crate hex;
 extern crate image;
 extern crate img_hash;
 
+use std::env;
 use std::ffi::OsString;
 use std::fs;
 use std::io;
+use std::io::Write;
 use std::path::Path;
 
 use img_hash::{HashAlg, Hasher, HasherConfig};
@@ -17,6 +19,8 @@ use img_hash::{HashAlg, Hasher, HasherConfig};
 static ALGORITHMS: [&str; 4] = ["ahash", "dct_ahash", "dhash", "dct_dhash"];
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
     let matches = clap_app!(imghasher =>
         (version: env!("CARGO_PKG_VERSION"))
         (author: env!("CARGO_PKG_AUTHORS"))
@@ -32,6 +36,8 @@ fn main() {
 
         (@arg base64: -b --base64 "Output in base64")
         // (@arg debug: -d --debug ... "Sets the level of debugging information")
+        (@arg force: -f --force "Do not prompt before overwriting")
+        (@arg interactive: -i --interactive "Prompt before overwrite")
         (@arg quiet: -q --quiet "No output, suitable for rename mode")
         (@arg recursive: -R --recursive "Process directories recursively")
         (@arg rename: --rename "Rename the image file name to the corresponding hash")
@@ -40,6 +46,8 @@ fn main() {
     ).get_matches();
 
     let is_base64 = matches.is_present("base64");
+    let is_force = matches.is_present("force");
+    let is_interactive = matches.is_present("interactive");
     let is_quiet = matches.is_present("quiet");
     let is_recursive = matches.is_present("recursive");
     let is_rename = matches.is_present("rename");
@@ -55,22 +63,33 @@ fn main() {
     let algorithm = matches.value_of("algorithm").unwrap();
 
     let hasher = match &algorithm[..] {
-        "ahash" => config.hash_alg(HashAlg::Mean).to_hasher(),
-        "dct_ahash" => config.hash_alg(HashAlg::Mean).preproc_dct().to_hasher(),
-        "dhash" => config.hash_alg(HashAlg::Gradient).to_hasher(),
-        "dct_dhash" => config.hash_alg(HashAlg::Gradient).preproc_dct().to_hasher(),
+        "ahash" => config
+            .hash_alg(HashAlg::Mean)
+            .to_hasher(),
+        "dct_ahash" => config
+            .hash_alg(HashAlg::Mean)
+            .preproc_dct()
+            .to_hasher(),
+        "dhash" => config
+            .hash_alg(HashAlg::Gradient)
+            .to_hasher(),
+        "dct_dhash" => config
+            .hash_alg(HashAlg::Gradient)
+            .preproc_dct()
+            .to_hasher(),
         _ => config.to_hasher()
     };
 
-    let proc_img_file = |hasher: &Hasher, img_path: &Path, force: bool| -> io::Result<()> {
-        if !force && image::ImageFormat::from_path(&img_path).is_err() {
+    let proc_img_file = |hasher: &Hasher, img_path: &Path, specified: bool|
+                         -> io::Result<()> {
+        if !specified && image::ImageFormat::from_path(&img_path).is_err() {
             return Ok(());
         }
 
         let img = match image::open(&img_path) {
             Err(why) => {
-                eprintln!("[ERR] couldn't open '{}': {}",
-                          img_path.display(), why);
+                eprintln!("{}: couldn't open '{}': {}",
+                          &args[0], img_path.display(), why);
                 return Ok(());
             }
             Ok(data) => data,
@@ -87,9 +106,6 @@ fn main() {
         };
 
         if !is_quiet {
-            // println!("{:?}  {}", hex::encode(hash.as_bytes()), file);
-            // println!("{}  {}", hash.to_base64(), file);
-            // println!("{}  {}", &text, file);
             // println!("{}  {}", &text, match path.to_str() {
             //     None => panic!("At least 1 path is not a valid UTF-8 sequence"),
             //     Some(s) => s
@@ -99,15 +115,42 @@ fn main() {
 
         if is_rename {
             let parent: &Path = img_path.parent().unwrap();
-            // let prefix = img_path.file_stem();
-            // let suffix = img_path.extension();
-            if let Some(suffix) = img_path.extension() {
-                let mut new_filename = OsString::from(text + ".");
-                new_filename.push(suffix);
-                fs::rename(
-                    img_path,
-                    parent.join(Path::new(&new_filename)),
-                )?;
+            let prefix = img_path.file_stem();
+            let suffix = img_path.extension();
+
+            if let Some(prefix) = prefix {
+                if OsString::from(&text) != prefix {
+                    if let Some(suffix) = suffix {
+                        let mut new_filename = OsString::from(text + ".");
+                        new_filename.push(suffix);
+                        let new_path = parent.join(Path::new(&new_filename));
+
+                        if new_path.exists() {
+                            if new_path.is_dir() {
+                                eprintln!("{}: cannot rename '{}': {}",
+                                          &args[0], img_path.display(), "Dir exists");
+                            } else if is_force {
+                                fs::remove_file(&new_path)?;
+                                fs::rename(img_path, new_path)?;
+                            } else if is_interactive {
+                                print!("{}: overwrite '{}'? ",
+                                       &args[0], new_path.display());
+                                io::stdout().flush()?;
+                                let mut answer = String::new();
+                                io::stdin().read_line(&mut answer)?;
+                                let answer = answer.trim_end().chars();
+                                if let Some(c) = answer.last() {
+                                    if c == 'y' || c == 'Y' {
+                                        fs::remove_file(&new_path)?;
+                                        fs::rename(img_path, new_path)?;
+                                    }
+                                }
+                            }
+                        } else {
+                            fs::rename(img_path, new_path)?;
+                        }
+                    }
+                }
             }
         }
 
@@ -135,8 +178,8 @@ fn main() {
     let proc = |hasher: &Hasher, img_path: &Path, being_chosen: bool| {
         match proc_img_file(&hasher, img_path, being_chosen) {
             Err(why) => {
-                eprintln!("[ERR] cannot process '{}': {}",
-                          img_path.display(), why);
+                eprintln!("{}: cannot process '{}': {}",
+                          &args[0], img_path.display(), why);
             }
             Ok(()) => {}
         };
@@ -154,18 +197,18 @@ fn main() {
                 };
                 match dir_visitor(path, is_recursive, &adapter) {
                     Err(why) => {
-                        eprintln!("[ERR] cannot process '{}': {}",
-                                  path.display(), why);
+                        eprintln!("{}: cannot process '{}': {}",
+                                  &args[0], path.display(), why);
                     }
                     Ok(()) => {}
                 };
             } else {
-                eprintln!("[ERR] cannot process '{}': Not a file or directory",
-                          path.display());
+                eprintln!("{}: cannot process '{}': Not a file or directory",
+                          &args[0], path.display());
             }
         } else {
-            eprintln!("[ERR] cannot access '{}': No such file or directory",
-                      path.display());
+            eprintln!("{}: cannot access '{}': No such file or directory",
+                      &args[0], path.display());
         }
     }
 }

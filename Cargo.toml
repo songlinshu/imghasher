@@ -1,9 +1,9 @@
 [package]
 name = "imghasher"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["ZhangZhilin <corex_public@outlook.com>"]
 edition = "2018"
-description = "A tool developed in Rust to process image hash"
+description = "A tool for image hash generation developed using Rust"
 
 readme = "README.md"
 homepage = "https://github.com/zhangzhilinx/imghasher"
