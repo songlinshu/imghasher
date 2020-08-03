@@ -23,9 +23,8 @@
 ```bash
 git clone https://github.com/zhangzhilinx/imghasher.git
 cd imghasher
-# cargo build
-# cargo run
-# cargo run -- [参数]...
+cargo install --path .
+imghasher [ARGS]...
 ```
 
 * 即将支持 `cargo install imghasher` 方式安装

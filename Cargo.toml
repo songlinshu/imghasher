@@ -21,4 +21,4 @@ exclude = [".idea", ".github"]
 clap = "~2.27.0"
 hex = "0.4.2"
 image = ">=0.21"
-img_hash = "~3.0"
+img_hash = "~3.1"

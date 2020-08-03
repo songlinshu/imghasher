@@ -23,9 +23,8 @@ The output format is hex string (default lowercase) or base64 string
 ```bash
 git clone https://github.com/zhangzhilinx/imghasher.git
 cd imghasher
-# cargo build
-# cargo run
-# cargo run -- [ARGS]...
+cargo install --path .
+imghasher [ARGS]...
 ```
 
 * Soon `cargo install imghasher` will be supported!
