@@ -1,6 +1,6 @@
 [package]
 name = "imghasher"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["ZhangZhilin <corex_public@outlook.com>"]
 edition = "2018"
 description = "A tool for image hash generation developed using Rust"
@@ -10,7 +10,7 @@ homepage = "https://github.com/zhangzhilinx/imghasher"
 repository = "https://github.com/zhangzhilinx/imghasher"
 license = "MIT"
 
-keywords = ["cli", "hash", "img-hash", "rename", "generator"]
+keywords = ["cli", "hash", "img-hash", "rename", "checksum"]
 categories = ["command-line-utilities", "computer-vision"]
 
 exclude = [".idea", ".github"]

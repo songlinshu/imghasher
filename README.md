@@ -34,7 +34,7 @@ imghasher [ARGS]...
 ## Usage
 
 ```out
-imghasher 0.1.1
+imghasher 0.1.2
 ZhangZhilin <corex_public@outlook.com>
 A tool for image hash generation developed using Rust
 
@@ -53,7 +53,7 @@ FLAGS:
     -V, --version        Prints version information
 
 OPTIONS:
-        --algo <algorithm>    Choose a hash algorithm [default: dhash]  [values: ahash, dct_ahash, dhash, dct_dhash]
+    -a, --algo <algorithm>    Choose a hash algorithm [default: dhash]  [values: ahash, dct_ahash, dhash, dct_dhash]
 
 ARGS:
     <FILE>...    Sets the input files or directories to use
@@ -74,6 +74,12 @@ The supported hash algorithms are:
 ## TODO
 
 * Support for reading from standard input
+
+* Support for shell (e.g. bash) completions
+
+* Refinement of shell return codes (error codes)
+
+* Multi-threaded parallel support
 
 * Support for `cargo install`
 
